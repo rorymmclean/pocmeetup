@@ -52,13 +52,99 @@ col2.subheader('Generative AI Managed Enterprise PLAtform Network')
 def change_q(myquestion):
     promt = myquestion
 
+def run_cyber(myquestion):
+    st.session_state.messages.append({"role": "user", "content": myquestion})
+    st.chat_message("user").write(myquestion)
+
+    ### Bring in my controlling documents and the additonal template
+    with open('content/cybersecurity.txt') as f:
+        tasks = f.readlines()
+    mytasks = str(tasks)    
+    template=f"""You are a cybersecurity expert. 
+    Provide an answer to the "Question" below. 
+    To answer this question, follow the "Steps" below and write a final conclusion based upon the results of the last step.
+    When you respond to an action indicate the type of response by beginging with "Thought:", "Observation:", or "Final answer:".
+    If you can't answer the question return the answer: "Sorry, but I can't help you with that task."
+
+    text:
+    {mytasks}
+
+    Question:
+    {myquestion}
+    """
+    
+    ### Build an agent that can be used to run SQL queries against the database
+    llm = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
+    mydb = SQLDatabase.from_uri("sqlite:///chinook.sqlite")
+    toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
+
+    sql_agent = create_sql_agent(
+        llm=llm, #OpenAI(temperature=0),
+        toolkit=toolkit,
+        verbose=False
+    )
+
+    ### Build an agent that can perform mathematics...not used but provided as an example.
+    llm_math_chain = LLMMathChain.from_llm(llm=llm, verbose=False)
+
+    ### Build a chain from the three tools
+    tools = [
+        Tool(
+            name="Calculator",
+            func=llm_math_chain.run,
+            description="useful for when you need to answer questions about math"
+        ),
+        Tool(
+            name="SQL",
+            func=sql_agent.run,
+            description="""This tool queries a SQLite database. It is useful for when you need to answer questions 
+            by running SQLite queries. Always indicate if your response is a "thought" or a "final answer". 
+            The following table information is provided to help you write your sql statement:
+            
+            apache_logs: (ID, ip, user, dt, tz, vrb, uri, resp, byt, referer, useragent)
+            emails: (send_date, from_name, to_name, subject, body, attachment_type, filesize, sentiment)
+            """
+        )
+    ]
+
+    planner = load_chat_planner(llm)
+    executor = load_agent_executor(
+        llm, 
+        tools, 
+        verbose=True,
+    )
+    pe_agent = PlanAndExecute(
+        planner=planner, 
+        executor=executor,  
+        verbose=True, 
+        max_iterations=2,
+    )
+
+    if show_detail:
+        f = io.StringIO()
+        with redirect_stdout(f):
+            with st.spinner("Processing..."):
+                response = pe_agent(template)
+    else:
+        with st.spinner("Processing..."):
+            response = pe_agent(template)
+
+    st.session_state.messages.append({"role": "assistant", "content": response['output']})    
+    st.chat_message('assistant').write(response['output'])
+
+    if show_detail:
+        with st.expander('Details', expanded=False):
+            s = f.getvalue()
+            st.write(s)
+
 with st.sidebar: 
     mysidebar = st.selectbox('Select GamePlan', ['Cybersecurity', 'Data Science'])
     if mysidebar == 'Cybersecurity':
         show_detail = st.checkbox('Show Details')
         st.markdown("---")
         st.markdown("### Standard Questions:")
-        st.button('Find Threats', on_click=change_q, args=['Who are out insider threats?'])
+        fit = st.button('Find Threats')
+        offhours = st.button('Offhour Access')
     if mysidebar == 'Data Science':
         st.markdown("---")
         st.markdown("### Planner Chain:")
@@ -87,91 +173,11 @@ if mysidebar == 'Cybersecurity':
         st.chat_message(msg["role"]).write(msg["content"])
 
     if prompt := st.chat_input(placeholder="Ask a cybersecurity question?"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
-
-        ### Bring in my controlling documents and the additonal template
-        with open('content/cybersecurity.txt') as f:
-            tasks = f.readlines()
-        mytasks = str(tasks)    
-        template=f"""You are a cybersecurity expert. 
-        Provide an answer to the "Question" below. 
-        To answer this question, follow the "Steps" below and write a final conclusion based upon the results of the last step.
-        When you respond to an action indicate the type of response by beginging with "Thought:", "Observation:", or "Final answer:".
-        If you can't answer the question return the answer: "Sorry, but I can't help you with that task."
-
-        text:
-        {mytasks}
-
-        Question:
-        {prompt}
-        """
-        ### Build an agent that can be used to run SQL queries against the database
-        llm = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
-        # db_dir = "content/chinook.sqlite"
-        # mydb = SQLDatabase.from_uri("sqlite:///" + os.path.abspath(db_dir))
-        # st.write("sqlite:///" + os.path.abspath(db_dir))
-        mydb = SQLDatabase.from_uri("sqlite:///chinook.sqlite")
-        toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
-
-        sql_agent = create_sql_agent(
-            llm=llm, #OpenAI(temperature=0),
-            toolkit=toolkit,
-            verbose=False
-        )
-
-        ### Build an agent that can perform mathematics...not used but provided as an example.
-        llm_math_chain = LLMMathChain.from_llm(llm=llm, verbose=False)
-
-        ### Build a chain from the three tools
-        tools = [
-            Tool(
-                name="Calculator",
-                func=llm_math_chain.run,
-                description="useful for when you need to answer questions about math"
-            ),
-            Tool(
-                name="SQL",
-                func=sql_agent.run,
-                description="""This tool queries a SQLite database. It is useful for when you need to answer questions 
-                by running SQLite queries. Always indicate if your response is a "thought" or a "final answer". 
-                The following table information is provided to help you write your sql statement:
-                
-                apache_logs: (ID, ip, user, dt, tz, vrb, uri, resp, byt, referer, useragent)
-                emails: (send_date, from_name, to_name, subject, body, attachment_type, filesize, sentiment)
-                """
-            )
-        ]
-
-        planner = load_chat_planner(llm)
-        executor = load_agent_executor(
-            llm, 
-            tools, 
-            verbose=True,
-        )
-        pe_agent = PlanAndExecute(
-            planner=planner, 
-            executor=executor,  
-            verbose=True, 
-            max_iterations=2,
-        )
-
-        if show_detail:
-            f = io.StringIO()
-            with redirect_stdout(f):
-                with st.spinner("Processing..."):
-                    response = pe_agent(template)
-        else:
-            with st.spinner("Processing..."):
-                response = pe_agent(template)
-
-        st.session_state.messages.append({"role": "assistant", "content": response['output']})    
-        st.chat_message('assistant').write(response['output'])
-
-        if show_detail:
-            with st.expander('Details', expanded=False):
-                s = f.getvalue()
-                st.write(s)
+        run_cyber(prompt)
+    if fit:
+        run_cyber("Who are our insider threats?")
+    if offhours:
+        run_cyber("Query the total number of accesses between the hours of 8pm and 6am by employee. Present the data in tabular format and sorted in descending order of total accesses.") 
             
 
 if mysidebar == 'Data Science':
