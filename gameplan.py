@@ -133,6 +133,7 @@ if mysidebar == 'Cybersecurity':
         llm = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
         db_dir = "content/chinook.sqlite"
         mydb = SQLDatabase.from_uri("sqlite:///" + os.path.abspath(db_dir))
+        st.write("sqlite:///" + os.path.abspath(db_dir))
         toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
 
         sql_agent = create_sql_agent(
