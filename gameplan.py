@@ -14,28 +14,9 @@ import os
 import openai
 import io
 from contextlib import redirect_stdout
-
-# import json
-# import requests
-# import pandas as pd
-# from typing import Optional, Type
-# import time
-# from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
-# from langchain.tools import DuckDuckGoSearchRun
-# from langchain import SerpAPIWrapper
-# from langchain.prompts.chat import (
-#     ChatPromptTemplate,
-#     SystemMessagePromptTemplate,
-#     AIMessagePromptTemplate,
-#     HumanMessagePromptTemplate,
-# )
-# from langchain.schema import (
-#     AIMessage,
-#     HumanMessage,
-#     SystemMessage
-# )
-# from langchain.agents import AgentExecutor
-
+from langchain.agents.agent_toolkits import create_python_agent
+from langchain.tools.python.tool import PythonREPLTool
+from langchain.python import PythonREPL
 
 ### CSS
 st.set_page_config(
@@ -72,19 +53,12 @@ def change_q(myquestion):
     promt = myquestion
 
 with st.sidebar: 
-    mysidebar = st.selectbox('Select GamePlan', ['Cybersecurity', 'Data Science', 'Tour Guide'])
+    mysidebar = st.selectbox('Select GamePlan', ['Cybersecurity', 'Data Science'])
     if mysidebar == 'Cybersecurity':
         show_detail = st.checkbox('Show Details')
         st.markdown("---")
         st.markdown("### Standard Questions:")
         st.button('Find Threats', on_click=change_q, args=['Who are out insider threats?'])
-    if mysidebar == 'Tour Guide':
-        st.markdown("---")
-        st.markdown("### Planner Chain:")
-        st.markdown("&nbsp;&nbsp;&nbsp; Vector Search")
-        st.markdown("### Executor Chain:")
-        st.markdown("&nbsp;&nbsp;&nbsp; Vector Search")
-        st.markdown("&nbsp;&nbsp;&nbsp; Internet Search")
     if mysidebar == 'Data Science':
         st.markdown("---")
         st.markdown("### Planner Chain:")
@@ -199,101 +173,8 @@ if mysidebar == 'Cybersecurity':
                 s = f.getvalue()
                 st.write(s)
             
-if mysidebar == 'Tour Guide':
-    from langchain.embeddings.openai import OpenAIEmbeddings
-    from langchain.llms import OpenAI
-    import openai
-    from langchain.chains import LLMChain
-    import chromadb
-    from chromadb.config import Settings
-    from langchain import PromptTemplate
-    chroma_client = chromadb.Client(Settings(
-        chroma_db_impl="duckdb+parquet",
-        persist_directory="content" # Optional, defaults to .chromadb/ in the current directory
-    ))
-    battle = chroma_client.get_collection(name="battleinfo", embedding_function=OpenAIEmbeddings())
-    geodata = chroma_client.get_collection(name="geodata", embedding_function=OpenAIEmbeddings())     
-
-    prompt_template = """Use the context below to write a 1000 word answer to the question asked. 
-    If you aren't sure of the answer then respond 'I don't know the answer':
-        Context: {context}
-        Question: {question}
-        Blog post:"""
-
-    PROMPT = PromptTemplate(
-        template=prompt_template, input_variables=["context", "question"]
-    )
-
-    llm = OpenAI(temperature=.7, max_tokens=2500)
-
-    chain = LLMChain(llm=llm, prompt=PROMPT)
-
-    def tour_guide(
-        question: str = "",
-        lat_long: list = "",
-        mystyle: str = 'location'):
-        if lat_long:
-            results = geodata.query(
-                query_embeddings=lat_long,
-                n_results=1,
-                where={"style": mystyle})
-            return results['documents'][0][0]
-        else:
-            response = openai.Embedding.create(
-            input=question,
-            model="text-embedding-ada-002"
-            )
-            qembeddings = response['data'][0]['embedding']
-            results = battle.query(
-                query_embeddings=qembeddings,
-                n_results=5)
-
-            all_text = ""
-            for x in results['documents'][0]:
-                all_text = all_text + "\n\n" + x
-
-            inputs = [{"context": all_text, "question": question}]
-            myoutput = chain.apply(inputs)
-            return myoutput[0]['text'].strip()
-
-    st.markdown("### **:blue[Overview:]** ")
-    st.markdown("**:blue[This gameplan can be used in the use case of tour guides or situations where an expert/sherpa needs to guide the user.]**")
-    runlocal = st.button('What Happened Here?', type='primary')
-    myquestion = st.text_input('Question', placeholder='Ask your tour guide?')
-    myanswer = ''
-    if runlocal:
-        mylatlong = [39.81537349036316, -77.23534021584484]
-        runlocal = ''
-        myquestion = ''
-        with st.spinner('Running LangChain...Please Wait...'):
-            myanswer = tour_guide(lat_long = mylatlong)
-    else:
-        mylatlong = ''
-        if myquestion:
-            with st.spinner('Running LangChain...Please Wait...'):
-                myanswer = tour_guide(question = myquestion)
-
-    if myanswer:
-        st.write("Answer:")
-        st.write(myanswer)
-
-    st.markdown('---')
-    with st.expander("See explanation"):
-        st.markdown("**:blue[The tourguide model uses an augmented Planner/Executor SuperChain.]**")
-        st.markdown("**:blue[Python determines if the user has submitted lat/long coordinates (such as when they hit the \[What happened here?\] button. If the user proposes a question, their location is determined and local areas of interest are used in the prompt to augment the answer. This then launches the Planner chain.]**")
-        st.markdown("**:blue[In the Executor phase the LLM performs a vector semantic KNN search of uploaded content to answer the user's question.]**")
-
-        col1, col2, col3 = st.columns([15, 70, 15])
-        col2.image('tour.jpg',caption='LangChain Structure')
-        col1b, col2b, col3b = st.columns([15, 70, 15])
-        col2b.image('map.jpg',caption='Gettysburg - Around Pickett\'s Charge')
-        col2b.image('IMG_2732.jpg',caption='Bryan Farm and 111th NY')
 
 if mysidebar == 'Data Science':
-    from langchain.agents.agent_toolkits import create_python_agent
-    from langchain.tools.python.tool import PythonREPLTool
-    from langchain.python import PythonREPL
-    from langchain.llms.openai import OpenAI
 
     agent_executor = create_python_agent(
         llm=OpenAI(temperature=0, max_tokens=1000),
