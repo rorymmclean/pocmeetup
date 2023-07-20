@@ -131,9 +131,10 @@ if mysidebar == 'Cybersecurity':
         """
         ### Build an agent that can be used to run SQL queries against the database
         llm = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
-        db_dir = "content/chinook.sqlite"
-        mydb = SQLDatabase.from_uri("sqlite:///" + os.path.abspath(db_dir))
-        st.write("sqlite:///" + os.path.abspath(db_dir))
+        # db_dir = "content/chinook.sqlite"
+        # mydb = SQLDatabase.from_uri("sqlite:///" + os.path.abspath(db_dir))
+        # st.write("sqlite:///" + os.path.abspath(db_dir))
+        mydb = SQLDatabase.from_uri("sqlite:///chinook.sqlite")
         toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
 
         sql_agent = create_sql_agent(
