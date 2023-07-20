@@ -55,7 +55,10 @@ st.markdown(f"""
 )
 
 # OpenAI Credentials
-openai_api_key = st.secrets["OPENAI_API_KEY"]
+if not os.environ["OPENAI_API_KEY"]:
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
+else:
+    openai_api_key = os.environ["OPENAI_API_KEY"]
 
 ### UI
 ""
