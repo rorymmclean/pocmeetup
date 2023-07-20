@@ -1,20 +1,20 @@
 ### Imports
 import streamlit as st
-import time
+# import time
 from langchain.agents import AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.tools import BaseTool, StructuredTool, Tool, tool
-from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
-from langchain.tools import DuckDuckGoSearchRun
+# from langchain.callbacks.manager import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
+# from langchain.tools import DuckDuckGoSearchRun
 from langchain.llms import OpenAI
 import openai
 
 from contextlib import redirect_stdout
 
-import json
-import requests
-import pandas as pd
-from typing import Optional, Type
+# import json
+# import requests
+# import pandas as pd
+# from typing import Optional, Type
 
 import os
 from langchain.chat_models import ChatOpenAI
@@ -23,25 +23,22 @@ from langchain import SerpAPIWrapper
 from langchain.agents.tools import Tool
 from langchain import LLMMathChain
 from langchain import PromptTemplate, LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    AIMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from langchain.schema import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage
-)
+# from langchain.prompts.chat import (
+#     ChatPromptTemplate,
+#     SystemMessagePromptTemplate,
+#     AIMessagePromptTemplate,
+#     HumanMessagePromptTemplate,
+# )
+# from langchain.schema import (
+#     AIMessage,
+#     HumanMessage,
+#     SystemMessage
+# )
 from langchain.agents import create_sql_agent
 from langchain.agents.agent_toolkits import SQLDatabaseToolkit
 from langchain.sql_database import SQLDatabase
-from langchain.agents import AgentExecutor
+# from langchain.agents import AgentExecutor
 import io
-
-
-
 
 ### CSS
 st.set_page_config(
@@ -60,9 +57,8 @@ st.markdown(f"""
     unsafe_allow_html=True,
 )
 
-
-### LangChain
-
+# OpenAI Credentials
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 ### UI
 ""
