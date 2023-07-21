@@ -17,6 +17,7 @@ from contextlib import redirect_stdout
 from langchain.agents.agent_toolkits import create_python_agent
 from langchain.tools.python.tool import PythonREPLTool
 from langchain.python import PythonREPL
+from datetime import datetime
 
 ### CSS
 st.set_page_config(
@@ -74,7 +75,8 @@ def run_cyber(myquestion):
     """
     
     ### Build an agent that can be used to run SQL queries against the database
-    llm = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
+    llm4 = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
+    llm = ChatOpenAI(model=llm_model, temperature=0, verbose=False)
     mydb = SQLDatabase.from_uri("sqlite:///chinook.sqlite")
     toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
 
@@ -109,7 +111,7 @@ def run_cyber(myquestion):
 
     planner = load_chat_planner(llm)
     executor = load_agent_executor(
-        llm, 
+        llm4, 
         tools, 
         verbose=True,
     )
@@ -141,6 +143,7 @@ with st.sidebar:
     mysidebar = st.selectbox('Select GamePlan', ['Cybersecurity', 'Data Science'])
     if mysidebar == 'Cybersecurity':
         show_detail = st.checkbox('Show Details')
+        llm_model = st.selectbox('Select Model', ['gpt-4', 'gpt-3.5-turbo'])
         st.markdown("---")
         st.markdown("### Standard Questions:")
         fit = st.button('Find Threats')
@@ -173,11 +176,23 @@ if mysidebar == 'Cybersecurity':
         st.chat_message(msg["role"]).write(msg["content"])
 
     if prompt := st.chat_input(placeholder="Ask a cybersecurity question?"):
+        start = datetime.now()
+        st.write("Start: "+str(start))
         run_cyber(prompt)
+        st.write("End: "+str(datetime.now()))
+        st.write("Duration: "+str(datetime.now() - start))
     if fit:
+        start = datetime.now()
+        st.write("Start: "+str(start))
         run_cyber("Who are our insider threats?")
+        st.write("End: "+str(datetime.now()))
+        st.write("Duration: "+str(datetime.now() - start))
     if offhours:
+        start = datetime.now()
+        st.write("Start: "+str(start))
         run_cyber("Query the total number of accesses between the hours of 8pm and 6am by employee. Present the data in tabular format and sorted in descending order of total accesses.") 
+        st.write("End: "+str(datetime.now()))
+        st.write("Duration: "+str(datetime.now() - start))
             
 
 if mysidebar == 'Data Science':
