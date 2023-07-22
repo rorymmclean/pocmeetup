@@ -19,8 +19,8 @@ from langchain.tools.python.tool import PythonREPLTool
 from langchain.python import PythonREPL
 from datetime import datetime
 import langchain
-from langchain.cache import InMemoryCache
-langchain.llm_cache = InMemoryCache()
+# from langchain.cache import InMemoryCache
+# langchain.llm_cache = InMemoryCache()
 from langchain.cache import SQLiteCache
 langchain.llm_cache = SQLiteCache(database_path="langchain.db")
 
@@ -108,6 +108,8 @@ def run_cyber(myquestion):
             description="""This tool queries a SQLite database. It is useful for when you need to answer questions 
             by running SQLite queries. Always indicate if your response is a "thought" or a "final answer". 
             The following table information is provided to help you write your sql statement. 
+            Use the emails table to determine email information.
+            If you are looking for employee information within the emails table use the from_name or to_name column.
             Use the apache_logs table to determine access information.
             If you are looking for employee information within the apache_logs table use the "user" column.
             If you are looking for date or time information within the apache_logs table use the dt column. 
@@ -129,7 +131,7 @@ def run_cyber(myquestion):
         executor=executor,  
         verbose=True, 
         max_iterations=2,
-        max_execution_time=180,
+        # max_execution_time=180,
     )
 
     if show_detail:
