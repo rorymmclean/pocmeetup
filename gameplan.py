@@ -129,6 +129,7 @@ def run_cyber(myquestion):
         executor=executor,  
         verbose=True, 
         max_iterations=2,
+        max_execution_time=180,
     )
 
     if show_detail:
