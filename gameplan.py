@@ -18,6 +18,11 @@ from langchain.agents.agent_toolkits import create_python_agent
 from langchain.tools.python.tool import PythonREPLTool
 from langchain.python import PythonREPL
 from datetime import datetime
+import langchain
+from langchain.cache import InMemoryCache
+langchain.llm_cache = InMemoryCache()
+from langchain.cache import SQLiteCache
+langchain.llm_cache = SQLiteCache(database_path="langchain.db")
 
 ### CSS
 st.set_page_config(
@@ -62,16 +67,17 @@ def run_cyber(myquestion):
         tasks = f.readlines()
     mytasks = str(tasks)    
     template=f"""You are a cybersecurity expert. 
-    Provide an answer to the "Question" below. 
-    To answer this question, follow the "Steps" below and write a final conclusion based upon the results of the last step.
-    When you respond to an action indicate the type of response by beginging with "Thought:", "Observation:", or "Final answer:".
+    Provide a detailed answer to the "QUESTION" below. 
+    Use the "TEXT" below to help develop to steps necessary to answer this question.
+    (When running a step the Thought/Action/Action Input/Observation can be repeated just 1 time.)
     If you can't answer the question return the answer: "Sorry, but I can't help you with that task."
 
-    text:
+    TEXT:
     {mytasks}
 
-    Question:
+    QUESTION:
     {myquestion}
+    Provide your justification for this answer.
     """
     
     ### Build an agent that can be used to run SQL queries against the database
@@ -101,7 +107,10 @@ def run_cyber(myquestion):
             func=sql_agent.run,
             description="""This tool queries a SQLite database. It is useful for when you need to answer questions 
             by running SQLite queries. Always indicate if your response is a "thought" or a "final answer". 
-            The following table information is provided to help you write your sql statement:
+            The following table information is provided to help you write your sql statement. 
+            Use the apache_logs table to determine access information.
+            If you are looking for employee information within the apache_logs table use the "user" column.
+            If you are looking for date or time information within the apache_logs table use the dt column. 
             
             apache_logs: (ID, ip, user, dt, tz, vrb, uri, resp, byt, referer, useragent)
             emails: (send_date, from_name, to_name, subject, body, attachment_type, filesize, sentiment)
@@ -190,10 +199,10 @@ if mysidebar == 'Cybersecurity':
     if offhours:
         start = datetime.now()
         st.write("Start: "+str(start))
-        run_cyber("Query the total number of accesses between the hours of 8pm and 6am by employee. Present the data in tabular format and sorted in descending order of total accesses.") 
+        run_cyber("Using the apache_logs table, list the users and their total accesses that occur between the hours of 8pm and 6am.") 
         st.write("End: "+str(datetime.now()))
         st.write("Duration: "+str(datetime.now() - start))
-            
+
 
 if mysidebar == 'Data Science':
 
