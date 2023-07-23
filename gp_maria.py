@@ -86,7 +86,7 @@ def run_cyber(myquestion):
     ### Build an agent that can be used to run SQL queries against the database
     llm4 = ChatOpenAI(model="gpt-4", temperature=0, verbose=False)
     llm = ChatOpenAI(model=llm_model, temperature=0, verbose=False)
-    mydb = SQLDatabase.from_uri("mariadb+pymysql://streamlit:streamlitpass@localhost/streamlit?charset=utf8mb4")
+    mydb = SQLDatabase.from_uri("mariadb+pymysql://streamlit:streamlitpass@pocmeetup_db_1/streamlit?charset=utf8mb4")
     toolkit = SQLDatabaseToolkit(db=mydb, llm=llm)
 
     sql_agent = create_sql_agent(
