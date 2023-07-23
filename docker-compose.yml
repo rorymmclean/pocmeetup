@@ -1,0 +1,18 @@
+services:
+  db:
+    # We use a mariadb image which supports both amd64 & arm64 architecture
+    image: mariadb:10.3
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=mypass
+      - MYSQL_DATABASE=streamlit
+      - MYSQL_USER=streamlit
+      - MYSQL_PASSWORD=streamlitpass
+    ports:
+      - "3306:3306"
+    expose:  
+      - 33060
+volumes:
+  db_data:
