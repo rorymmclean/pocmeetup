@@ -5,6 +5,8 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: always
+    networks:
+      - pocnetwork
     environment:
       - MYSQL_ROOT_PASSWORD=mypass
       - MYSQL_DATABASE=streamlit
@@ -14,5 +16,20 @@ services:
       - "3306:3306"
     expose:  
       - 33060
+
+  streamlit:
+    image: streamlit:latest  
+    networks:
+      - pocnetwork
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports: 
+      - "8501:8501"  
+
 volumes:
   db_data:
+
+networks:
+  pocnetwork:
+    name: pocnetwork
+    external: true
