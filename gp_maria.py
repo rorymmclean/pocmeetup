@@ -51,9 +51,11 @@ else:
 ### UI
 ""
 col1, col2 = st.columns( [1,5] )
-col1.image('628858.png', width=170)
-col2.title('GamePlan')
-col2.subheader('Generative AI Managed Enterprise PLAtform Network')
+col1.write("")
+col1.image('GTLogo.png', width=170)
+col2.write("")
+col2.subheader('GT AI Driven Cyber Analytics Platform')
+# col2.subheader('Generative AI Managed Enterprise PLAtform Network')
 # st.markdown('---')
 
 def change_q(myquestion):
@@ -161,6 +163,8 @@ with st.sidebar:
         st.markdown("### Standard Questions:")
         fit = st.button('Find Threats')
         offhours = st.button('Offhour Access')
+        st.markdown("---")
+        tz = st.container()
     if mysidebar == 'Data Science':
         st.markdown("---")
         st.markdown("### Planner Chain:")
@@ -190,22 +194,22 @@ if mysidebar == 'Cybersecurity':
 
     if prompt := st.chat_input(placeholder="Ask a cybersecurity question?"):
         start = datetime.now()
-        st.write("Start: "+str(start))
+        tz.write("Start: "+str(start)[10:])
         run_cyber(prompt)
-        st.write("End: "+str(datetime.now()))
-        st.write("Duration: "+str(datetime.now() - start))
+        tz.write("End: "+str(datetime.now())[10:])
+        tz.write("Duration: "+str(datetime.now() - start))
     if fit:
         start = datetime.now()
-        st.write("Start: "+str(start))
+        tz.write("Start: "+str(start)[10:])
         run_cyber("Who are our insider threats?")
-        st.write("End: "+str(datetime.now()))
-        st.write("Duration: "+str(datetime.now() - start))
+        tz.write("End: "+str(datetime.now())[10:])
+        tz.write("Duration: "+str(datetime.now() - start))
     if offhours:
         start = datetime.now()
-        st.write("Start: "+str(start))
+        tz.write("Start: "+str(start)[10:])
         run_cyber("Using the \"apache_logs\" table, create and ordered list of the top five users based upon their total accesses that occur between the hours of 8pm and 6am. Sort the list in descending order by \"total accesses\". ") 
-        st.write("End: "+str(datetime.now()))
-        st.write("Duration: "+str(datetime.now() - start))
+        tz.write("End: "+str(datetime.now())[10:])
+        tz.write("Duration: "+str(datetime.now() - start))
 
 
 if mysidebar == 'Data Science':
